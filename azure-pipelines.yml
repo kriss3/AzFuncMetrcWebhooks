@@ -1,0 +1,36 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  dotnetVersion: '10.0.x'
+  buildConfiguration: 'Release'
+  functionAppName: 'metrc-packages-webhook-poc'
+  azureServiceConnection: 'az-metrc-functions-poc'
+
+steps:
+- task: UseDotNet@2
+  inputs:
+    version: '$(dotnetVersion)'
+
+- script: |
+    dotnet restore
+    dotnet publish --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish
+  displayName: 'Build & Publish'
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish'
+    includeRootFolder: false
+    archiveType: zip
+    archiveFile: '$(Build.ArtifactStagingDirectory)/function.zip'
+    replaceExistingArchive: true
+
+- task: AzureFunctionApp@2
+  inputs:
+    connectedServiceNameARM: '$(azureServiceConnection)'
+    appType: 'functionAppLinux'
+    appName: '$(functionAppName)'
+    package: '$(Build.ArtifactStagingDirectory)/function.zip'
