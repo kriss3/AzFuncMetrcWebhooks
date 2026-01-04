@@ -38,11 +38,18 @@ public sealed class MetrcPackagesWebhookFunction
 
 		_log.LogInformation("Metrc webhook received. ContentType={ct} Length={len}", req.Headers.TryGetValues("Content-Type", out var ct) ? ct.FirstOrDefault() : "(none)", body.Length);
 
-		// Log first 1000 chars to learn the shape safely
+		// Log first 1000 chars to inspect the shape of the result
 		var preview = body.Length <= 1000 ? body : body[..1000];
 		_log.LogInformation("Payload preview (first 1000 chars): {preview}", preview);
 
+		// Extract a meaningful summary even if payload is wrapped
+		var summary = TryBuildPackageSummary(body) ?? "Received Metrc Packages webhook (could not parse fields yet).";
 
+		await _pushover.SendAsync("Metrc Packages Webhook", summary);
+
+		var ok = req.CreateResponse(HttpStatusCode.OK);
+		await ok.WriteStringAsync("OK");
+		return ok;
 	}
 
 	private static string? TryBuildPackageSummary(string body)
