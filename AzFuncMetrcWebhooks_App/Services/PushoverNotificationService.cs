@@ -26,5 +26,8 @@ public sealed class PushoverNotificationService
 			["title"] = title,
 			["message"] = message
 		});
+
+		var resp = await _httpClient.PostAsync("https://api.pushover.net/1/messages.json", content);
+		resp.EnsureSuccessStatusCode();
 	}
 }
