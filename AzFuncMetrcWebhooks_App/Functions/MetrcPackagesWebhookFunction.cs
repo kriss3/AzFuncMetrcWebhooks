@@ -37,5 +37,23 @@ public sealed class MetrcPackagesWebhookFunction
 
 	private static string SummarizePackage(JsonElement pkg, JsonElement? dataCount)
 	{
+		string GetString(JsonElement obj, string name)
+			=> obj.ValueKind == JsonValueKind.Object && obj.TryGetProperty(name, out var v) ? v.ToString() : "(n/a)";
+
+		decimal? GetDecimal(JsonElement obj, string name)
+		{
+			if (obj.ValueKind != JsonValueKind.Object || !obj.TryGetProperty(name, out var v)) return null;
+			if (v.ValueKind == JsonValueKind.Number && v.TryGetDecimal(out var d)) return d;
+			if (v.ValueKind == JsonValueKind.String && decimal.TryParse(v.GetString(), out var ds)) return ds;
+			return null;
+		}
+
+		bool? GetBool(JsonElement obj, string name)
+		{
+			if (obj.ValueKind != JsonValueKind.Object || !obj.TryGetProperty(name, out var v)) return null;
+			if (v.ValueKind == JsonValueKind.True) return true;
+			if (v.ValueKind == JsonValueKind.False) return false;
+			return null;
+		}
 	}
 }
