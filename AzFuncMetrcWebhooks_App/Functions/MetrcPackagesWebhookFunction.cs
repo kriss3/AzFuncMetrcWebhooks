@@ -1,4 +1,6 @@
 ﻿using AzFuncMetrcWebhooks_App.Services;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -20,5 +22,12 @@ public sealed class MetrcPackagesWebhookFunction
 		_log = log;
 		_validator = validator;
 		_pushover = pushover;
+	}
+
+	[Function("MetrcPackagesWebhook")]
+	public async Task<HttpResponseData> Run(
+		[HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "metrc/packages/webhook")]
+		HttpRequestData req)
+	{
 	}
 }
