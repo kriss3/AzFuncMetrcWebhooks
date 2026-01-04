@@ -15,5 +15,9 @@ public sealed class PushoverNotificationService
 	{
 		var token = Environment.GetEnvironmentVariable("Pushover__AppToken");
 		var user = Environment.GetEnvironmentVariable("Pushover__UserKey");
+
+		if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(user))
+			throw new InvalidOperationException("Missing Pushover__AppToken or Pushover__UserKey.");
+
 	}
 }
