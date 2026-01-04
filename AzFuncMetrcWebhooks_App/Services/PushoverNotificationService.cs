@@ -1,9 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using static System.Net.WebRequestMethods;
 
 namespace AzFuncMetrcWebhooks_App.Services;
 
-internal class PushoverNotificationService
+public sealed class PushoverNotificationService
 {
+	private readonly HttpClient _httpClient;
+
+	public PushoverNotificationService(HttpClient httpClient) => _httpClient = httpClient;
+
+	public async Task SendAsync(string title, string message)
+	{
+	}
 }
