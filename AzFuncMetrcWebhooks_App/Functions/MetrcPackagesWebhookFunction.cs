@@ -33,6 +33,16 @@ public sealed class MetrcPackagesWebhookFunction
 			_log.LogWarning("Rejected webhook: invalid secret.");
 			return req.CreateResponse(HttpStatusCode.Unauthorized);
 		}
+
+		var body = await new StreamReader(req.Body).ReadToEndAsync();
+
+		_log.LogInformation("Metrc webhook received. ContentType={ct} Length={len}", req.Headers.TryGetValues("Content-Type", out var ct) ? ct.FirstOrDefault() : "(none)", body.Length);
+
+		// Log first 1000 chars to learn the shape safely
+		var preview = body.Length <= 1000 ? body : body[..1000];
+		_log.LogInformation("Payload preview (first 1000 chars): {preview}", preview);
+
+
 	}
 
 	private static string? TryBuildPackageSummary(string body)
