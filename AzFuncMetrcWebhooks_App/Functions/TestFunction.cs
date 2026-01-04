@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
-namespace AzFuncMetrcWebhooks_App;
+namespace AzFuncMetrcWebhooks_App.Functions;
 
 public class TestFunction
 {
