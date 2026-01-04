@@ -87,8 +87,10 @@ public sealed class MetrcPackagesWebhookFunction
 
 		var countText = dataCount.HasValue ? $"datacount={dataCount.Value}" : null;
 
-		return $@"{(countText is null ? "" : $"{countText}\n")}Label: {label} Id: {id} • Type: {type} Item: {itemName} Qty: {(qty is null ? "(n/a)" : $"{qty:0.####} {uom}".Trim())} Loc: {location} Lab: {lab} • {flags} LastModified: {lastMod}".Trim();
+		return $@"{(countText is null 
+			? "" 
+			: $"{countText}\n")} Label: {label} Id: {id} • Type: {type} Item: {itemName} Qty: {(qty is null ? "(n/a)" : $"{qty:0.####} {uom}".Trim())} Loc: {location} Lab: {lab} • {flags} LastModified: {lastMod}".Trim();
 	}
 
-
+	private static string YN(bool? v) => v == true ? "Y" : "N";
 }
