@@ -14,6 +14,14 @@ public sealed class MetrcWebhookValidator
 		if (string.IsNullOrWhiteSpace(expected))
 			return false;
 
+		// 1) Header check: X-Metrc-Webhook-Secret
+		if (req.Headers.TryGetValues("X-Metrc-Webhook-Secret", out var values))
+		{
+			var provided = values.FirstOrDefault();
+			if (string.Equals(provided, expected, StringComparison.Ordinal))
+				return true;
+		}
+
 		return result;
 	}
 }
