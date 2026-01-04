@@ -2,6 +2,7 @@
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using System.Net;
 using System.Text.Json;
 
 namespace AzFuncMetrcWebhooks_App.Functions;
@@ -27,6 +28,11 @@ public sealed class MetrcPackagesWebhookFunction
 		[HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "metrc/packages/webhook")]
 		HttpRequestData req)
 	{
+		if (!_validator.IsValid(req))
+		{
+			_log.LogWarning("Rejected webhook: invalid secret.");
+			return req.CreateResponse(HttpStatusCode.Unauthorized);
+		}
 	}
 
 	private static string? TryBuildPackageSummary(string body)
