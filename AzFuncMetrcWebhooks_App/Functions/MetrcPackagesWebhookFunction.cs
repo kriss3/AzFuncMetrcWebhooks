@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
 
 namespace AzFuncMetrcWebhooks_App.Functions;
 
@@ -28,6 +29,13 @@ public sealed class MetrcPackagesWebhookFunction
 	public async Task<HttpResponseData> Run(
 		[HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "metrc/packages/webhook")]
 		HttpRequestData req)
+	{
+	}
+
+	private static string? TryBuildPackageSummary(string body)
+	{ }
+
+	private static string SummarizePackage(JsonElement pkg, JsonElement? dataCount)
 	{
 	}
 }
