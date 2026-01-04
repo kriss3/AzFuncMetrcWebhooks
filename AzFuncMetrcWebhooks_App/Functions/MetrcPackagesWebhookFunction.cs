@@ -55,5 +55,40 @@ public sealed class MetrcPackagesWebhookFunction
 			if (v.ValueKind == JsonValueKind.False) return false;
 			return null;
 		}
+
+		string label = GetString(pkg, "Label");
+		string id = GetString(pkg, "Id");
+		string type = GetString(pkg, "PackageType");
+
+		var qty = GetDecimal(pkg, "Quantity");
+		var uom = GetString(pkg, "UnitOfMeasureAbbreviation");
+		if (uom == "(n/a)") uom = GetString(pkg, "UnitOfMeasureName");
+
+		string location = GetString(pkg, "SublocationName");
+		if (location == "(n/a)") location = GetString(pkg, "LocationName");
+
+		string lab = GetString(pkg, "LabTestingState");
+		string lastMod = GetString(pkg, "LastModified");
+
+		// Item.Name (nested)
+		string itemName = "(n/a)";
+		if (pkg.ValueKind == JsonValueKind.Object &&
+			pkg.TryGetProperty("Item", out var item) &&
+			item.ValueKind == JsonValueKind.Object)
+		{
+			itemName = GetString(item, "Name");
+		}
+
+		var flags =
+			$"Hold:{YN(GetBool(pkg, "IsOnHold"))} " +
+			$"Inv:{YN(GetBool(pkg, "IsOnInvestigation"))} " +
+			$"Recall:{YN(GetBool(pkg, "IsOnRecallCombined"))} " +
+			$"Finished:{YN(GetBool(pkg, "IsFinished"))}";
+
+		var countText = dataCount.HasValue ? $"datacount={dataCount.Value}" : null;
+
+		return $@"{(countText is null ? "" : $"{countText}\n")}Label: {label} Id: {id} • Type: {type} Item: {itemName} Qty: {(qty is null ? "(n/a)" : $"{qty:0.####} {uom}".Trim())} Loc: {location} Lab: {lab} • {flags} LastModified: {lastMod}".Trim();
 	}
+
+
 }
