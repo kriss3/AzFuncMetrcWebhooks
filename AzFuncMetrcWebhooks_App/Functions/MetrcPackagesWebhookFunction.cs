@@ -2,9 +2,6 @@
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Text.Json;
 
 namespace AzFuncMetrcWebhooks_App.Functions;
@@ -33,7 +30,40 @@ public sealed class MetrcPackagesWebhookFunction
 	}
 
 	private static string? TryBuildPackageSummary(string body)
-	{ }
+	{
+		try
+		{
+			using var doc = JsonDocument.Parse(body);
+			var root = doc.RootElement;
+
+			// Case 1: wrapper template { "data": [ ... ], "datacount": n }
+			if (root.ValueKind == JsonValueKind.Object &&
+				root.TryGetProperty("data", out var data) &&
+				data.ValueKind == JsonValueKind.Array &&
+				data.GetArrayLength() > 0)
+			{
+				return SummarizePackage(data[0], root.TryGetProperty("datacount", out var dc) ? dc : (JsonElement?)null);
+			}
+
+			// Case 2: raw array of packages
+			if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() > 0)
+			{
+				return SummarizePackage(root[0], null);
+			}
+
+			// Case 3: single package object
+			if (root.ValueKind == JsonValueKind.Object)
+			{
+				return SummarizePackage(root, null);
+			}
+
+			return null;
+		}
+		catch
+		{
+			return null;
+		}
+	}
 
 	private static string SummarizePackage(JsonElement pkg, JsonElement? dataCount)
 	{
