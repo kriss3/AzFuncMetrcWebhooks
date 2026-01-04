@@ -13,5 +13,7 @@ public sealed class PushoverNotificationService
 
 	public async Task SendAsync(string title, string message)
 	{
+		var token = Environment.GetEnvironmentVariable("Pushover__AppToken");
+		var user = Environment.GetEnvironmentVariable("Pushover__UserKey");
 	}
 }
