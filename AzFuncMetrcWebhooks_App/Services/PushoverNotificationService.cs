@@ -19,5 +19,12 @@ public sealed class PushoverNotificationService
 		if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(user))
 			throw new InvalidOperationException("Missing Pushover__AppToken or Pushover__UserKey.");
 
+		using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+		{
+			["token"] = token,
+			["user"] = user,
+			["title"] = title,
+			["message"] = message
+		});
 	}
 }
