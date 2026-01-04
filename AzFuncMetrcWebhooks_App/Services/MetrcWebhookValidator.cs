@@ -9,12 +9,11 @@ public sealed class MetrcWebhookValidator
 {
 	public bool IsValid(HttpRequestData req) 
 	{
-		bool result = false;
 		var expected = Environment.GetEnvironmentVariable("MetrcWebhook__Secret");
 		if (string.IsNullOrWhiteSpace(expected))
 			return false;
 
-		// 1) Header check: X-Metrc-Webhook-Secret
+		// Header check: X-Metrc-Webhook-Secret
 		if (req.Headers.TryGetValues("X-Metrc-Webhook-Secret", out var values))
 		{
 			var provided = values.FirstOrDefault();
@@ -22,6 +21,9 @@ public sealed class MetrcWebhookValidator
 				return true;
 		}
 
-		return result;
+		// Query string check: ?secret=...
+		var query = System.Web.HttpUtility.ParseQueryString(req.Url.Query);
+		var q = query.Get("secret");
+		return string.Equals(q, expected, StringComparison.Ordinal);
 	}
 }
