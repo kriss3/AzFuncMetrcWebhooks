@@ -28,6 +28,8 @@ public sealed class MetrcPackagesWebhookFunction
 		[HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "metrc/packages/webhook")]
 		HttpRequestData req)
 	{
+		_log.LogWarning("WEBHOOK HIT: {method} {url}", req.Method, req.Url);
+
 		if (!_validator.IsValid(req))
 		{
 			_log.LogWarning("Rejected webhook: invalid secret.");
@@ -48,7 +50,14 @@ public sealed class MetrcPackagesWebhookFunction
 		// Extract a meaningful summary even if payload is wrapped
 		var summary = TryBuildPackageSummary(body) ?? "Received Metrc Packages webhook (could not parse fields yet).";
 
-		await _pushover.SendAsync("Metrc Packages Webhook", summary);
+		try
+		{
+			await _pushover.SendAsync("Metrc Packages Webhook", summary);
+		}
+		catch (Exception ex)
+		{
+			_log.LogError(ex, "Pushover send failed.");
+		}
 
 		var ok = req.CreateResponse(HttpStatusCode.OK);
 		await ok.WriteStringAsync("OK");
