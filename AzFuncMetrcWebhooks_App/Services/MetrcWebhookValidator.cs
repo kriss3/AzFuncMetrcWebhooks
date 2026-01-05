@@ -1,27 +1,19 @@
 ﻿using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace AzFuncMetrcWebhooks_App.Services;
 
-public sealed class MetrcWebhookValidator
+public sealed class MetrcWebhookValidator(IConfiguration config)
 {
-	private readonly string? _expectedSecret;
+	private readonly string? _expectedSecret = config["MetrcWebhook__Secret"];
 
-	public MetrcWebhookValidator(IConfiguration config)
-	{
-		_expectedSecret = config["MetrcWebhook__Secret"]; // do NOT throw here
-	}
-
-	public bool IsValid(HttpRequestData req)
+    public bool IsValid(HttpRequestData req)
 	{
 		if (string.IsNullOrWhiteSpace(_expectedSecret))
 			return false;
 
 		// simplest possible parse; avoids System.Web dependency
-		var query = req.Url.Query; // like "?secret=abc"
+		var query = req.Url.Query;
 		if (string.IsNullOrWhiteSpace(query))
 			return false;
 
