@@ -9,7 +9,7 @@ variables:
   buildConfiguration: 'Release'
   functionAppName: 'metrc-packages-webhook-poc'
   azureServiceConnection: 'az-metrc-functions-poc'
-  functionProject: 'AzFuncMetrcWebhooks_App.csproj'
+  functionProject: 'AzFuncMetrcWebhooks_App/AzFuncMetrcWebhooks_App.csproj'
 
 steps:
 - task: UseDotNet@2
@@ -17,8 +17,8 @@ steps:
     version: '$(dotnetVersion)'
 
 - script: |
-    dotnet restore
-    dotnet publish --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish
+    dotnet restore "$(functionProject)"
+    dotnet publish "$(functionProject)" --configuration $(buildConfiguration) --output "$(Build.ArtifactStagingDirectory)/publish"
   displayName: 'Build & Publish'
 
 - task: ArchiveFiles@2
