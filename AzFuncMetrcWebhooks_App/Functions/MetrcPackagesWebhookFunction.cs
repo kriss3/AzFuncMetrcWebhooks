@@ -36,8 +36,15 @@ public sealed class MetrcPackagesWebhookFunction
 
 		if (!_validator.IsValid(req))
 		{
-			_log.LogWarning("Rejected webhook: invalid secret.");
-			return req.CreateResponse(HttpStatusCode.Unauthorized);
+			// Platform probes / random hits: acknowledge but ignore.
+			_log.LogInformation("Ignoring non-Metrc request (missing/invalid secret).");
+			return req.CreateResponse(HttpStatusCode.OK);
+		}
+
+		if (req.Body is null || req.Body.Length == 0)
+		{
+			_log.LogInformation("Ignoring request with empty body.");
+			return req.CreateResponse(HttpStatusCode.OK);
 		}
 
 		_log.LogWarning("WEBHOOK HIT - starting body read");
