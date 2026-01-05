@@ -28,6 +28,10 @@ public sealed class MetrcPackagesWebhookFunction
 		[HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "metrc/packages/webhook")]
 		HttpRequestData req)
 	{
+		// Troubleshooting:
+		const string BuildStamp = "2026-01-04T00:15Z"; // change this each deploy
+		_log.LogWarning("BUILD STAMP: {stamp}", BuildStamp);
+
 		_log.LogWarning("WEBHOOK HIT: {method} {url}", req.Method, req.Url);
 
 		if (!_validator.IsValid(req))
@@ -60,7 +64,7 @@ public sealed class MetrcPackagesWebhookFunction
 		}
 
 		var ok = req.CreateResponse(HttpStatusCode.OK);
-		await ok.WriteStringAsync("OK");
+		await ok.WriteStringAsync($"OK {BuildStamp}");
 		return ok;
 	}
 
