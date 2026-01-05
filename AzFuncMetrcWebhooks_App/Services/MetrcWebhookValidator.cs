@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -7,23 +8,32 @@ namespace AzFuncMetrcWebhooks_App.Services;
 
 public sealed class MetrcWebhookValidator
 {
-	public bool IsValid(HttpRequestData req) 
+	private readonly string? _expectedSecret;
+
+	public MetrcWebhookValidator(IConfiguration config)
 	{
-		var expected = Environment.GetEnvironmentVariable("MetrcWebhook__Secret");
-		if (string.IsNullOrWhiteSpace(expected))
+		_expectedSecret = config["MetrcWebhook__Secret"]; // do NOT throw here
+	}
+
+	public bool IsValid(HttpRequestData req)
+	{
+		if (string.IsNullOrWhiteSpace(_expectedSecret))
 			return false;
 
-		// Header check: X-Metrc-Webhook-Secret
-		if (req.Headers.TryGetValues("X-Metrc-Webhook-Secret", out var values))
+		// simplest possible parse; avoids System.Web dependency
+		var query = req.Url.Query; // like "?secret=abc"
+		if (string.IsNullOrWhiteSpace(query))
+			return false;
+
+		// quick parse for "secret="
+		var parts = query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries);
+		foreach (var p in parts)
 		{
-			var provided = values.FirstOrDefault();
-			if (string.Equals(provided, expected, StringComparison.Ordinal))
-				return true;
+			var kv = p.Split('=', 2);
+			if (kv.Length == 2 && kv[0] == "secret")
+				return string.Equals(Uri.UnescapeDataString(kv[1]), _expectedSecret, StringComparison.Ordinal);
 		}
 
-		// Query string check: ?secret=...
-		var query = System.Web.HttpUtility.ParseQueryString(req.Url.Query);
-		var q = query.Get("secret");
-		return string.Equals(q, expected, StringComparison.Ordinal);
+		return false;
 	}
 }
