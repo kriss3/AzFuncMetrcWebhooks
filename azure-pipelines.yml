@@ -5,10 +5,11 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  dotnetVersion: '10.0.x'
+  dotnetVersion: '8.0.x'
   buildConfiguration: 'Release'
   functionAppName: 'metrc-packages-webhook-poc'
   azureServiceConnection: 'az-metrc-functions-poc'
+  functionProject: 'AzFuncMetrcWebhooks_App.csproj'
 
 steps:
 - task: UseDotNet@2
