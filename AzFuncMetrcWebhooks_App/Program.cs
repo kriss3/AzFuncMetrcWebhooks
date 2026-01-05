@@ -2,13 +2,13 @@ using AzFuncMetrcWebhooks_App.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-var builder = Host.CreateApplicationBuilder(args);
+var host = new HostBuilder()
+	.ConfigureFunctionsWebApplication()
+	.ConfigureServices(services =>
+	{
+		services.AddHttpClient<PushoverNotificationService>();
+		services.AddSingleton<MetrcWebhookValidator>();
+	})
+	.Build();
 
-builder.Services.AddFunctionsWorkerDefaults();
-builder.Services.AddHttpClient();
-builder.Services.AddHttpClient<PushoverNotificationService>();
-
-builder.Services.AddSingleton<MetrcWebhookValidator>();
-
-var host = builder.Build();
 host.Run();
