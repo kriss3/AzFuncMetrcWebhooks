@@ -17,6 +17,9 @@ steps:
     version: '$(dotnetVersion)'
 
 - script: |
+    dotnet --info
+    ls -la
+    ls -la AzFuncMetrcWebhooks_App
     dotnet restore "$(functionProject)"
     dotnet publish "$(functionProject)" --configuration $(buildConfiguration) --output "$(Build.ArtifactStagingDirectory)/publish"
   displayName: 'Build & Publish'
