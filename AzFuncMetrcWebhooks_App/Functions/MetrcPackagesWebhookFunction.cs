@@ -30,38 +30,27 @@ public sealed class MetrcPackagesWebhookFunction
 	[HttpTrigger(AuthorizationLevel.Anonymous, "post", "put", Route = "metrc/packages/webhook")]
 	HttpRequestData req)
 	{
-		string ua = req.Headers.TryGetValues("User-Agent", out var uav) ? uav.FirstOrDefault() ?? "(none)" : "(none)";
-		string xff = req.Headers.TryGetValues("X-Forwarded-For", out var xffv) ? xffv.FirstOrDefault() ?? "(none)" : "(none)";
-		string xri = req.Headers.TryGetValues("X-Real-IP", out var xrv) ? xrv.FirstOrDefault() ?? "(none)" : "(none)";
-
-		_log.LogWarning("CALLER: UA={ua} XFF={xff} XRI={xri}", ua, xff, xri);
-
 		// LOG #1: entry + url
 		_log.LogWarning("WEBHOOK HIT: {method} {url}", req.Method, req.Url);
 		_log.LogWarning(	"ENV MetrcWebhook__Secret present: {present}",
-			!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MetrcWebhook__Secret"))
-);
-		// LOG #2: run validator and log result
+			!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MetrcWebhook__Secret")));
+		
 		var isValid = _validator.IsValid(req);
 		_log.LogWarning("VALIDATOR RESULT: {isValid}", isValid);
 
 		if (!isValid)
 		{
-			// LOG #3: make this Warning so it shows in traces
 			_log.LogWarning("Ignoring request: missing/invalid secret. url={url}", req.Url);
 			return req.CreateResponse(HttpStatusCode.OK);
 		}
 
-		// LOG #4: about to read body
 		_log.LogWarning("BODY READ: starting");
-
 		string body;
 		using (var reader = new StreamReader(req.Body))
 		{
 			body = await reader.ReadToEndAsync();
 		}
 
-		// LOG #5: body length AFTER reading (this is the only length that matters)
 		_log.LogWarning("BODY READ: done. BodyLength={len}", body.Length);
 
 		if (string.IsNullOrWhiteSpace(body))
@@ -70,11 +59,9 @@ public sealed class MetrcPackagesWebhookFunction
 			return req.CreateResponse(HttpStatusCode.OK);
 		}
 
-		// LOG #6: content-type (warning so you see it)
 		var contentType = req.Headers.TryGetValues("Content-Type", out var ct) ? ct.FirstOrDefault() : "(none)";
 		_log.LogWarning("CONTENT-TYPE: {ct}", contentType);
 
-		// Preview (keep to Warning so you actually see it)
 		var preview = body.Length <= 500 ? body : body[..500];
 		_log.LogWarning("BODY PREVIEW (first 500 chars): {preview}", preview);
 
@@ -112,14 +99,9 @@ public sealed class MetrcPackagesWebhookFunction
 			_log.LogWarning(ex, "Could not parse payload key fields.");
 		}
 
-
-		// LOG #7: before pushover
-		_log.LogWarning("PUSHOVER: sending. SummaryLength={len}", summary.Length);
-
 		try
 		{
 			await _pushover.SendAsync("Metrc Packages Webhook", summary);
-			// LOG #8: after pushover success
 			_log.LogWarning("PUSHOVER: sent OK");
 		}
 		catch (Exception ex)
