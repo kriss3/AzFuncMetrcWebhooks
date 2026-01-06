@@ -25,40 +25,67 @@ public sealed class MetrcPackagesWebhookFunction
 
 	[Function("MetrcPackagesWebhook")]
 	public async Task<HttpResponseData> Run(
-		[HttpTrigger(AuthorizationLevel.Anonymous, "post", "put", Route = "metrc/packages/webhook")]
-		HttpRequestData req)
+	[HttpTrigger(AuthorizationLevel.Anonymous, "post", "put", Route = "metrc/packages/webhook")]
+	HttpRequestData req)
 	{
-		// Troubleshooting:
 		const string BuildStamp = "2026-01-05T00:15Z"; // change this each deploy
 		_log.LogWarning("BUILD STAMP: {stamp}", BuildStamp);
 
+		// LOG #1: entry + url
 		_log.LogWarning("WEBHOOK HIT: {method} {url}", req.Method, req.Url);
 
-		if (!_validator.IsValid(req))
+		// LOG #2: show whether expected secret exists in Azure (WITHOUT printing it)
+		// Add ExpectedSecretIsConfigured property to validator as shown below
+		_log.LogWarning("VALIDATOR: ExpectedSecretConfigured={configured}", _validator.ExpectedSecretIsConfigured);
+
+		// LOG #3: run validator and log result
+		var isValid = _validator.IsValid(req);
+		_log.LogWarning("VALIDATOR RESULT: {isValid}", isValid);
+
+		if (!isValid)
 		{
-			// Platform probes / random hits: acknowledge but ignore.
-			_log.LogInformation("Ignoring non-Metrc request (missing/invalid secret).");
+			// LOG #4: make this Warning so it shows in traces
+			_log.LogWarning("Ignoring request: missing/invalid secret. url={url}", req.Url);
 			return req.CreateResponse(HttpStatusCode.OK);
 		}
 
-		_log.LogWarning("WEBHOOK HIT - starting body read");
-		var body = await new StreamReader(req.Body).ReadToEndAsync();
+		// LOG #5: about to read body
+		_log.LogWarning("BODY READ: starting");
 
-		_log.LogInformation("Metrc webhook received. ContentType={ct} Length={len}", req.Headers.TryGetValues("Content-Type", out var ct) ? ct.FirstOrDefault() : "(none)", body.Length);
-		_log.LogWarning("WEBHOOK BODY LEN: {len}", body.Length);
-		
-		// Log first 1000 chars to inspect the shape of the result
-		var preview = body.Length <= 1000 ? body : body[..1000];
+		string body;
+		using (var reader = new StreamReader(req.Body))
+		{
+			body = await reader.ReadToEndAsync();
+		}
 
-		_log.LogInformation("Payload preview (first 1000 chars): {preview}", preview);
-		_log.LogWarning("WEBHOOK BODY PREVIEW: {preview}", body.Length <= 500 ? body : body[..500]);
+		// LOG #6: body length AFTER reading (this is the only length that matters)
+		_log.LogWarning("BODY READ: done. BodyLength={len}", body.Length);
 
-		// Extract a meaningful summary even if payload is wrapped
-		var summary = TryBuildPackageSummary(body) ?? "Received Metrc Packages webhook (could not parse fields yet).";
+		if (string.IsNullOrWhiteSpace(body))
+		{
+			_log.LogWarning("Ignoring request: body is empty/whitespace.");
+			return req.CreateResponse(HttpStatusCode.OK);
+		}
+
+		// LOG #7: content-type (warning so you see it)
+		var contentType = req.Headers.TryGetValues("Content-Type", out var ct) ? ct.FirstOrDefault() : "(none)";
+		_log.LogWarning("CONTENT-TYPE: {ct}", contentType);
+
+		// Preview (keep to Warning so you actually see it)
+		var preview = body.Length <= 500 ? body : body[..500];
+		_log.LogWarning("BODY PREVIEW (first 500 chars): {preview}", preview);
+
+		var summary = TryBuildPackageSummary(body)
+			?? "Received Metrc Packages webhook (could not parse fields yet).";
+
+		// LOG #8: before pushover
+		_log.LogWarning("PUSHOVER: sending. SummaryLength={len}", summary.Length);
 
 		try
 		{
 			await _pushover.SendAsync("Metrc Packages Webhook", summary);
+			// LOG #9: after pushover success
+			_log.LogWarning("PUSHOVER: sent OK");
 		}
 		catch (Exception ex)
 		{
@@ -69,6 +96,7 @@ public sealed class MetrcPackagesWebhookFunction
 		await ok.WriteStringAsync($"OK {BuildStamp}");
 		return ok;
 	}
+
 
 	private static string? TryBuildPackageSummary(string body)
 	{
