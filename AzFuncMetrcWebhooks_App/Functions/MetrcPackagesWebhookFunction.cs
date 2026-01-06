@@ -25,7 +25,7 @@ public sealed class MetrcPackagesWebhookFunction
 
 	[Function("MetrcPackagesWebhook")]
 	public async Task<HttpResponseData> Run(
-		[HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "metrc/packages/webhook")]
+		[HttpTrigger(AuthorizationLevel.Anonymous, "post", "put", Route = "metrc/packages/webhook")]
 		HttpRequestData req)
 	{
 		// Troubleshooting:
@@ -38,12 +38,6 @@ public sealed class MetrcPackagesWebhookFunction
 		{
 			// Platform probes / random hits: acknowledge but ignore.
 			_log.LogInformation("Ignoring non-Metrc request (missing/invalid secret).");
-			return req.CreateResponse(HttpStatusCode.OK);
-		}
-
-		if (req.Body is null || req.Body.Length == 0)
-		{
-			_log.LogInformation("Ignoring request with empty body.");
 			return req.CreateResponse(HttpStatusCode.OK);
 		}
 
