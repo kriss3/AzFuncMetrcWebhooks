@@ -36,23 +36,18 @@ public sealed class MetrcPackagesWebhookFunction
 		_log.LogWarning(	"ENV MetrcWebhook__Secret present: {present}",
 			!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MetrcWebhook__Secret"))
 );
-
-		// LOG #2: show whether expected secret exists in Azure (WITHOUT printing it)
-		// Add ExpectedSecretIsConfigured property to validator as shown below
-		_log.LogWarning("VALIDATOR: ExpectedSecretConfigured={configured}", _validator.ExpectedSecretIsConfigured);
-
-		// LOG #3: run validator and log result
+		// LOG #2: run validator and log result
 		var isValid = _validator.IsValid(req);
 		_log.LogWarning("VALIDATOR RESULT: {isValid}", isValid);
 
 		if (!isValid)
 		{
-			// LOG #4: make this Warning so it shows in traces
+			// LOG #3: make this Warning so it shows in traces
 			_log.LogWarning("Ignoring request: missing/invalid secret. url={url}", req.Url);
 			return req.CreateResponse(HttpStatusCode.OK);
 		}
 
-		// LOG #5: about to read body
+		// LOG #4: about to read body
 		_log.LogWarning("BODY READ: starting");
 
 		string body;
@@ -61,7 +56,7 @@ public sealed class MetrcPackagesWebhookFunction
 			body = await reader.ReadToEndAsync();
 		}
 
-		// LOG #6: body length AFTER reading (this is the only length that matters)
+		// LOG #5: body length AFTER reading (this is the only length that matters)
 		_log.LogWarning("BODY READ: done. BodyLength={len}", body.Length);
 
 		if (string.IsNullOrWhiteSpace(body))
@@ -70,7 +65,7 @@ public sealed class MetrcPackagesWebhookFunction
 			return req.CreateResponse(HttpStatusCode.OK);
 		}
 
-		// LOG #7: content-type (warning so you see it)
+		// LOG #6: content-type (warning so you see it)
 		var contentType = req.Headers.TryGetValues("Content-Type", out var ct) ? ct.FirstOrDefault() : "(none)";
 		_log.LogWarning("CONTENT-TYPE: {ct}", contentType);
 
@@ -81,13 +76,13 @@ public sealed class MetrcPackagesWebhookFunction
 		var summary = TryBuildPackageSummary(body)
 			?? "Received Metrc Packages webhook (could not parse fields yet).";
 
-		// LOG #8: before pushover
+		// LOG #7: before pushover
 		_log.LogWarning("PUSHOVER: sending. SummaryLength={len}", summary.Length);
 
 		try
 		{
 			await _pushover.SendAsync("Metrc Packages Webhook", summary);
-			// LOG #9: after pushover success
+			// LOG #8: after pushover success
 			_log.LogWarning("PUSHOVER: sent OK");
 		}
 		catch (Exception ex)
