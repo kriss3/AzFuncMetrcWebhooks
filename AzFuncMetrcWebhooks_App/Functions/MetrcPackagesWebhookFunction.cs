@@ -82,6 +82,30 @@ public sealed class MetrcPackagesWebhookFunction
 		var summary = TryBuildPackageSummary(body)
 			?? "Received Metrc Packages webhook (could not parse fields yet).";
 
+		try
+		{
+			using var doc = JsonDocument.Parse(body);
+			var root = doc.RootElement;
+
+			JsonElement pkg =
+				root.ValueKind == JsonValueKind.Object && root.TryGetProperty("data", out var data) && data.ValueKind == JsonValueKind.Array && data.GetArrayLength() > 0
+					? data[0]
+					: root.ValueKind == JsonValueKind.Array && root.GetArrayLength() > 0
+						? root[0]
+						: root;
+
+			var id = pkg.ValueKind == JsonValueKind.Object && pkg.TryGetProperty("Id", out var idEl) ? idEl.ToString() : "(no Id)";
+			var lastModified = pkg.ValueKind == JsonValueKind.Object && pkg.TryGetProperty("LastModified", out var lmEl) ? lmEl.ToString() : "(no LastModified)";
+			var label = pkg.ValueKind == JsonValueKind.Object && pkg.TryGetProperty("Label", out var labEl) ? labEl.ToString() : "(no Label)";
+
+			_log.LogWarning("PAYLOAD KEY FIELDS: Id={id} Label={label} LastModified={lm}", id, label, lastModified);
+		}
+		catch (Exception ex)
+		{
+			_log.LogWarning(ex, "Could not parse payload key fields.");
+		}
+
+
 		// LOG #7: before pushover
 		_log.LogWarning("PUSHOVER: sending. SummaryLength={len}", summary.Length);
 
