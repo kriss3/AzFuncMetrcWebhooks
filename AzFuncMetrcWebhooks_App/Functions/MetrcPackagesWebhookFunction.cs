@@ -30,9 +30,6 @@ public sealed class MetrcPackagesWebhookFunction
 	[HttpTrigger(AuthorizationLevel.Anonymous, "post", "put", Route = "metrc/packages/webhook")]
 	HttpRequestData req)
 	{
-		const string BuildStamp = "2026-01-05T00:15Z"; // change this each deploy
-		_log.LogWarning("BUILD STAMP: {stamp}", BuildStamp);
-
 		string ua = req.Headers.TryGetValues("User-Agent", out var uav) ? uav.FirstOrDefault() ?? "(none)" : "(none)";
 		string xff = req.Headers.TryGetValues("X-Forwarded-For", out var xffv) ? xffv.FirstOrDefault() ?? "(none)" : "(none)";
 		string xri = req.Headers.TryGetValues("X-Real-IP", out var xrv) ? xrv.FirstOrDefault() ?? "(none)" : "(none)";
@@ -131,7 +128,7 @@ public sealed class MetrcPackagesWebhookFunction
 		}
 
 		var ok = req.CreateResponse(HttpStatusCode.OK);
-		await ok.WriteStringAsync($"OK {BuildStamp}");
+		await ok.WriteStringAsync($"OK");
 		return ok;
 	}
 
