@@ -7,8 +7,8 @@ public sealed class MetrcWebhookValidator(IConfiguration config)
 {
 	private readonly string? _expectedSecret = config["MetrcWebhook__Secret"];
 
-	public string? ExpectedSecretIsSet =>
-		string.IsNullOrWhiteSpace(_expectedSecret) ? null : "***configured***";
+	public string ExpectedSecretIsConfigured =>
+		string.IsNullOrWhiteSpace(_expectedSecret) ? "NO" : "YES";
 
 	public bool IsValid(HttpRequestData req)
 	{
