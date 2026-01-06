@@ -31,6 +31,12 @@ public sealed class MetrcPackagesWebhookFunction
 		const string BuildStamp = "2026-01-05T00:15Z"; // change this each deploy
 		_log.LogWarning("BUILD STAMP: {stamp}", BuildStamp);
 
+		string ua = req.Headers.TryGetValues("User-Agent", out var uav) ? uav.FirstOrDefault() ?? "(none)" : "(none)";
+		string xff = req.Headers.TryGetValues("X-Forwarded-For", out var xffv) ? xffv.FirstOrDefault() ?? "(none)" : "(none)";
+		string xri = req.Headers.TryGetValues("X-Real-IP", out var xrv) ? xrv.FirstOrDefault() ?? "(none)" : "(none)";
+
+		_log.LogWarning("CALLER: UA={ua} XFF={xff} XRI={xri}", ua, xff, xri);
+
 		// LOG #1: entry + url
 		_log.LogWarning("WEBHOOK HIT: {method} {url}", req.Method, req.Url);
 		_log.LogWarning(	"ENV MetrcWebhook__Secret present: {present}",
