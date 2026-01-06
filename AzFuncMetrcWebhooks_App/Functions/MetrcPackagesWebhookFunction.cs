@@ -2,6 +2,7 @@
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Text.Json;
 
@@ -12,6 +13,7 @@ public sealed class MetrcPackagesWebhookFunction
 	private readonly ILogger<MetrcPackagesWebhookFunction> _log;
 	private readonly MetrcWebhookValidator _validator;
 	private readonly PushoverNotificationService _pushover;
+	private static readonly ConcurrentDictionary<string, byte> _seen = new();
 
 	public MetrcPackagesWebhookFunction(
 		ILogger<MetrcPackagesWebhookFunction> log,
@@ -97,6 +99,14 @@ public sealed class MetrcPackagesWebhookFunction
 			var id = pkg.ValueKind == JsonValueKind.Object && pkg.TryGetProperty("Id", out var idEl) ? idEl.ToString() : "(no Id)";
 			var lastModified = pkg.ValueKind == JsonValueKind.Object && pkg.TryGetProperty("LastModified", out var lmEl) ? lmEl.ToString() : "(no LastModified)";
 			var label = pkg.ValueKind == JsonValueKind.Object && pkg.TryGetProperty("Label", out var labEl) ? labEl.ToString() : "(no Label)";
+
+			var dedupeKey = $"{id}:{lastModified}";
+
+			if (!_seen.TryAdd(dedupeKey, 0))
+			{
+				_log.LogWarning("DEDUPED: already processed {key}", dedupeKey);
+				return req.CreateResponse(HttpStatusCode.OK);
+			}
 
 			_log.LogWarning("PAYLOAD KEY FIELDS: Id={id} Label={label} LastModified={lm}", id, label, lastModified);
 		}
