@@ -46,6 +46,7 @@ public sealed class MetrcPackagesWebhookFunction
 
 		_log.LogInformation("Metrc webhook received. ContentType={ct} Length={len}", req.Headers.TryGetValues("Content-Type", out var ct) ? ct.FirstOrDefault() : "(none)", body.Length);
 		_log.LogWarning("WEBHOOK BODY LEN: {len}", body.Length);
+		
 		// Log first 1000 chars to inspect the shape of the result
 		var preview = body.Length <= 1000 ? body : body[..1000];
 
