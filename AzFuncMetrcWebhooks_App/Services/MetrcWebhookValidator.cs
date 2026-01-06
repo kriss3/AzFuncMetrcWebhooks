@@ -3,24 +3,21 @@ using Microsoft.Extensions.Configuration;
 
 namespace AzFuncMetrcWebhooks_App.Services;
 
-public sealed class MetrcWebhookValidator(IConfiguration config)
+public sealed class MetrcWebhookValidator
 {
-	private readonly string? _expectedSecret = config["MetrcWebhook__Secret"];
-
-	public string ExpectedSecretIsConfigured =>
-		string.IsNullOrWhiteSpace(_expectedSecret) ? "NO" : "YES";
-
 	public bool IsValid(HttpRequestData req)
 	{
-		if (string.IsNullOrWhiteSpace(_expectedSecret))
+		// Read at request time (not at startup)
+		var expectedSecret = Environment.GetEnvironmentVariable("MetrcWebhook__Secret");
+
+		if (string.IsNullOrWhiteSpace(expectedSecret))
 			return false;
 
 		var query = req.Url.Query;
 		if (string.IsNullOrWhiteSpace(query))
 			return false;
 
-		var parts = query.TrimStart('?')
-						 .Split('&', StringSplitOptions.RemoveEmptyEntries);
+		var parts = query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries);
 
 		foreach (var p in parts)
 		{
@@ -29,7 +26,7 @@ public sealed class MetrcWebhookValidator(IConfiguration config)
 				string.Equals(kv[0], "secret", StringComparison.OrdinalIgnoreCase))
 			{
 				var actual = Uri.UnescapeDataString(kv[1]);
-				return string.Equals(actual, _expectedSecret, StringComparison.Ordinal);
+				return string.Equals(actual, expectedSecret, StringComparison.Ordinal);
 			}
 		}
 
