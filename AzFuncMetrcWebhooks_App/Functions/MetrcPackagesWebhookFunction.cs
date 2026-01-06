@@ -33,6 +33,9 @@ public sealed class MetrcPackagesWebhookFunction
 
 		// LOG #1: entry + url
 		_log.LogWarning("WEBHOOK HIT: {method} {url}", req.Method, req.Url);
+		_log.LogWarning(	"ENV MetrcWebhook__Secret present: {present}",
+			!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MetrcWebhook__Secret"))
+);
 
 		// LOG #2: show whether expected secret exists in Azure (WITHOUT printing it)
 		// Add ExpectedSecretIsConfigured property to validator as shown below
