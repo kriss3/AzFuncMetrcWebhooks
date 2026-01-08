@@ -141,6 +141,14 @@ public static class MetrcPackagesWebhookPayloadHelper
 	private static string? GetString(JsonElement obj, string name)
 		=> obj.ValueKind == JsonValueKind.Object && obj.TryGetProperty(name, out var v) ? v.ToString() : null;
 
+	private static decimal? GetDecimal(JsonElement obj, string name)
+	{
+		if (obj.ValueKind != JsonValueKind.Object || !obj.TryGetProperty(name, out var v)) return null;
+		if (v.ValueKind == JsonValueKind.Number && v.TryGetDecimal(out var d)) return d;
+		if (v.ValueKind == JsonValueKind.String && decimal.TryParse(v.GetString(), out var ds)) return ds;
+		return null;
+	}
+
 
 }
 
