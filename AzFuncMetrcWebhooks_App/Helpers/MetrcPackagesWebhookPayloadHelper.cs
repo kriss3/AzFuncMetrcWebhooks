@@ -99,6 +99,46 @@ public static class MetrcPackagesWebhookPayloadHelper
 		}
 	}
 
+	private static string? SummarizePackage(JsonElement pkg, JsonElement? dataCount)
+	{
+		if (pkg.ValueKind != JsonValueKind.Object)
+			return null;
+
+		var label = GetString(pkg, "Label") ?? "(n/a)";
+		var id = GetString(pkg, "Id") ?? "(n/a)";
+		var type = GetString(pkg, "PackageType") ?? "(n/a)";
+
+		var qty = GetDecimal(pkg, "Quantity");
+		var uom = GetString(pkg, "UnitOfMeasureAbbreviation");
+		if (string.IsNullOrWhiteSpace(uom) || uom == "(n/a)")
+			uom = GetString(pkg, "UnitOfMeasureName") ?? "(n/a)";
+
+		var location = GetString(pkg, "SublocationName");
+		if (string.IsNullOrWhiteSpace(location) || location == "(n/a)")
+			location = GetString(pkg, "LocationName") ?? "(n/a)";
+
+		var lab = GetString(pkg, "LabTestingState") ?? "(n/a)";
+		var lastMod = GetString(pkg, "LastModified") ?? "(n/a)";
+
+		// Item.Name (nested)
+		var itemName = "(n/a)";
+		if (pkg.TryGetProperty("Item", out var item) && item.ValueKind == JsonValueKind.Object)
+			itemName = GetString(item, "Name") ?? "(n/a)";
+
+		var flags =
+			$"Hold:{YN(GetBool(pkg, "IsOnHold"))} " +
+			$"Inv:{YN(GetBool(pkg, "IsOnInvestigation"))} " +
+			$"Recall:{YN(GetBool(pkg, "IsOnRecallCombined"))} " +
+			$"Finished:{YN(GetBool(pkg, "IsFinished"))}";
+
+		var countText = dataCount.HasValue ? $"datacount={dataCount.Value}" : null;
+
+		var qtyText = qty is null ? "(n/a)" : $"{qty:0.####} {uom}".Trim();
+
+		return $@"{(countText is null ? "" : $"{countText}\n")}Label: {label} Id: {id} • Type: {type} Item: {itemName} Qty: {qtyText} Loc: {location} Lab: {lab} • {flags} LastModified: {lastMod}"
+			.Trim();
+	}
+
 }
 
 public sealed record PackageInfo(
