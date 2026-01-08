@@ -59,7 +59,29 @@ public static class MetrcPackagesWebhookPayloadHelper
 		}
 	}
 
+	private static JsonElement ExtractFirstPackage(JsonElement root, out JsonElement? dataCount)
+	{
+		dataCount = null;
 
+		// Case 1: wrapper template { "data": [ ... ], "datacount": n }
+		if (root.ValueKind == JsonValueKind.Object &&
+			root.TryGetProperty("data", out var data) &&
+			data.ValueKind == JsonValueKind.Array &&
+			data.GetArrayLength() > 0)
+		{
+			if (root.TryGetProperty("datacount", out var dc))
+				dataCount = dc;
+
+			return data[0];
+		}
+
+		// Case 2: raw array of packages
+		if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() > 0)
+			return root[0];
+
+		// Case 3: single package object
+		return root;
+	}
 
 
 
