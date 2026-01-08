@@ -9,7 +9,6 @@ namespace AzFuncMetrcWebhooks_App.Helpers;
 
 public static class MetrcPackagesWebhookPayloadHelper
 {
-
 	public static async Task<string> ReadBodyAsync(Stream body)
 	{
 		using var reader = new StreamReader(body);
@@ -157,6 +156,7 @@ public static class MetrcPackagesWebhookPayloadHelper
 		return null;
 	}
 
+	private static string YN(bool? v) => v == true ? "Y" : "N";
 
 }
 
