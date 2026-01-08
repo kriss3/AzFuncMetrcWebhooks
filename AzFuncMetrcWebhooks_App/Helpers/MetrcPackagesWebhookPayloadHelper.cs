@@ -83,7 +83,21 @@ public static class MetrcPackagesWebhookPayloadHelper
 		return root;
 	}
 
+	private static string? TryBuildPackageSummary(string body)
+	{
+		try
+		{
+			using var doc = JsonDocument.Parse(body);
+			var root = doc.RootElement;
 
+			var pkg = ExtractFirstPackage(root, out var dataCount);
+			return SummarizePackage(pkg, dataCount);
+		}
+		catch
+		{
+			return null;
+		}
+	}
 
 }
 
