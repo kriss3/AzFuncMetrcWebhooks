@@ -120,7 +120,6 @@ public static class MetrcPackagesWebhookPayloadHelper
 		var lab = GetString(pkg, "LabTestingState") ?? "(n/a)";
 		var lastMod = GetString(pkg, "LastModified") ?? "(n/a)";
 
-		// Item.Name (nested)
 		var itemName = "(n/a)";
 		if (pkg.TryGetProperty("Item", out var item) && item.ValueKind == JsonValueKind.Object)
 			itemName = GetString(item, "Name") ?? "(n/a)";
