@@ -138,6 +138,10 @@ public static class MetrcPackagesWebhookPayloadHelper
 			.Trim();
 	}
 
+	private static string? GetString(JsonElement obj, string name)
+		=> obj.ValueKind == JsonValueKind.Object && obj.TryGetProperty(name, out var v) ? v.ToString() : null;
+
+
 }
 
 public sealed record PackageInfo(
