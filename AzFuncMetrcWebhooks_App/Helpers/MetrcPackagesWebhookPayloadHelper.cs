@@ -149,6 +149,14 @@ public static class MetrcPackagesWebhookPayloadHelper
 		return null;
 	}
 
+	private static bool? GetBool(JsonElement obj, string name)
+	{
+		if (obj.ValueKind != JsonValueKind.Object || !obj.TryGetProperty(name, out var v)) return null;
+		if (v.ValueKind == JsonValueKind.True) return true;
+		if (v.ValueKind == JsonValueKind.False) return false;
+		return null;
+	}
+
 
 }
 
