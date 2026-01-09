@@ -62,6 +62,12 @@ public static class WebhookLogHelper
 	public static void Accepted(ILogger logger)
 		=> logger.LogInformation("Webhook accepted.");
 
+	public static void BodyPreview(ILogger logger, string preview)
+	{
+		if (!string.IsNullOrWhiteSpace(preview))
+			logger.LogDebug("Body preview (first chars): {preview}", preview);
+	}
+
 }
 
 public sealed record RequestLogInfo(
