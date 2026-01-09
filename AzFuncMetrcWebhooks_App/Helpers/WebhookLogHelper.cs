@@ -9,3 +9,12 @@ namespace AzFuncMetrcWebhooks_App.Helpers;
 public static class WebhookLogHelper
 {
 }
+
+public sealed record RequestLogInfo(
+		string FunctionName,
+		string Method,
+		string Url,
+		string ContentType,
+		int BodyLength,
+		string BodyPreview,
+		string? CorrelationId);
