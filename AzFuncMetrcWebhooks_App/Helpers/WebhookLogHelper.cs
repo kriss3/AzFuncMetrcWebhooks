@@ -68,6 +68,10 @@ public static class WebhookLogHelper
 			logger.LogDebug("Body preview (first chars): {preview}", preview);
 	}
 
+	public static void DedupeComputed(ILogger logger, string dedupeKey, string id, string label, string lastModified)
+		=> logger.LogInformation("Dedupe computed: {dedupeKey} (Id={id}, Label={label}, LastModified={lastModified})",
+			dedupeKey, id, label, lastModified);
+
 }
 
 public sealed record RequestLogInfo(
