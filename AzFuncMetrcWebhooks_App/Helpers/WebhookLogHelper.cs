@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -34,6 +35,22 @@ public static class WebhookLogHelper
 			BodyLength: body?.Length ?? 0,
 			BodyPreview: preview,
 			CorrelationId: correlationId);
+	}
+
+	public static IDisposable BeginScope(ILogger logger, RequestLogInfo info)
+	{
+		// Everything inside this scope will automatically include these properties (structured logging)
+		var scope = new Dictionary<string, object?>
+		{
+			["fn"] = info.FunctionName,
+			["method"] = info.Method,
+			["url"] = info.Url,
+			["contentType"] = info.ContentType,
+			["bodyLen"] = info.BodyLength,
+			["corrId"] = info.CorrelationId
+		};
+
+		return logger.BeginScope(scope);
 	}
 }
 
