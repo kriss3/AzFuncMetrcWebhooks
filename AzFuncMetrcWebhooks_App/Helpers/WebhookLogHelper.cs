@@ -59,6 +59,9 @@ public static class WebhookLogHelper
 	public static void Rejected(ILogger logger, string reason)
 		=> logger.LogWarning("Webhook rejected: {reason}", reason);
 
+	public static void Accepted(ILogger logger)
+		=> logger.LogInformation("Webhook accepted.");
+
 }
 
 public sealed record RequestLogInfo(
