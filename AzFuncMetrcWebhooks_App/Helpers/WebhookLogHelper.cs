@@ -52,6 +52,10 @@ public static class WebhookLogHelper
 
 		return logger.BeginScope(scope);
 	}
+
+	public static void Hit(ILogger logger)
+		=> logger.LogInformation("Webhook hit.");
+
 }
 
 public sealed record RequestLogInfo(
