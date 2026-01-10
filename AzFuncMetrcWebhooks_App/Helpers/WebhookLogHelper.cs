@@ -81,6 +81,9 @@ public static class WebhookLogHelper
 	public static void PushoverSent(ILogger logger)
 		=> logger.LogInformation("Pushover notification sent.");
 
+	public static void PushoverFailed(ILogger logger, Exception ex)
+		=> logger.LogError(ex, "Pushover notification failed.");
+
 }
 
 public sealed record RequestLogInfo(
