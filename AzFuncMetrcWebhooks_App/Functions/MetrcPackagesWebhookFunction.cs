@@ -1,4 +1,5 @@
-﻿using AzFuncMetrcWebhooks_App.Services;
+﻿using AzFuncMetrcWebhooks_App.Helpers;
+using AzFuncMetrcWebhooks_App.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -30,6 +31,9 @@ public sealed class MetrcPackagesWebhookFunction
 	[HttpTrigger(AuthorizationLevel.Anonymous, "post", "put", Route = "metrc/packages/webhook")]
 	HttpRequestData req)
 	{
+		WebhookLogHelper.Hit(_log);
+
+
 		// LOG #1: entry + url
 		_log.LogWarning("WEBHOOK HIT: {method} {url}", req.Method, req.Url);
 		_log.LogWarning(	"ENV MetrcWebhook__Secret present: {present}",
