@@ -78,6 +78,9 @@ public static class WebhookLogHelper
 	public static void DedupeDuplicate(ILogger logger, string dedupeKey)
 		=> logger.LogInformation("Duplicate webhook ignored: {dedupeKey}", dedupeKey);
 
+	public static void PushoverSent(ILogger logger)
+		=> logger.LogInformation("Pushover notification sent.");
+
 }
 
 public sealed record RequestLogInfo(
