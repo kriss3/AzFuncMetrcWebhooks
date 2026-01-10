@@ -72,6 +72,9 @@ public static class WebhookLogHelper
 		=> logger.LogInformation("Dedupe computed: {dedupeKey} (Id={id}, Label={label}, LastModified={lastModified})",
 			dedupeKey, id, label, lastModified);
 
+	public static void DedupeSkipped(ILogger logger)
+		=> logger.LogWarning("Dedupe skipped: could not compute dedupe key.");
+
 }
 
 public sealed record RequestLogInfo(
