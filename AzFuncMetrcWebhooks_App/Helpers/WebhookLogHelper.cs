@@ -84,6 +84,15 @@ public static class WebhookLogHelper
 	public static void PushoverFailed(ILogger logger, Exception ex)
 		=> logger.LogError(ex, "Pushover notification failed.");
 
+	private static string? TryGetHeader(IEnumerable<KeyValuePair<string, IEnumerable<string>>> headers, string name)
+	{
+		foreach (var h in headers)
+		{
+			if (string.Equals(h.Key, name, StringComparison.OrdinalIgnoreCase))
+				return h.Value?.FirstOrDefault();
+		}
+		return null;
+	}
 }
 
 public sealed record RequestLogInfo(
