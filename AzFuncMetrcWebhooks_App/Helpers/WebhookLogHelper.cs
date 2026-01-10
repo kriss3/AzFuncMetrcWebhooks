@@ -75,6 +75,9 @@ public static class WebhookLogHelper
 	public static void DedupeSkipped(ILogger logger)
 		=> logger.LogWarning("Dedupe skipped: could not compute dedupe key.");
 
+	public static void DedupeDuplicate(ILogger logger, string dedupeKey)
+		=> logger.LogInformation("Duplicate webhook ignored: {dedupeKey}", dedupeKey);
+
 }
 
 public sealed record RequestLogInfo(
