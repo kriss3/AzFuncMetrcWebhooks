@@ -57,85 +57,87 @@ public static class MetrcPackagesWebhookPayloadHelper
 		return new MetrcPackagesPayload(dataCount, packages);
 	}
 
-
-	private static JsonElement ExtractFirstPackage(JsonElement root, out JsonElement? dataCount)
+	public static IReadOnlyList<PackageInfo> BuildInfos(string body)
 	{
-		dataCount = null;
+		using var doc = JsonDocument.Parse(body);
+		var root = doc.RootElement;
 
-		// Case 1: wrapper template { "data": [ ... ], "datacount": n }
+		JsonElement? dataCount = null;
+		var packages = new List<JsonElement>();
+
+		// Metrc wrapper: { data: [...], datacount: n }
 		if (root.ValueKind == JsonValueKind.Object &&
 			root.TryGetProperty("data", out var data) &&
-			data.ValueKind == JsonValueKind.Array &&
-			data.GetArrayLength() > 0)
+			data.ValueKind == JsonValueKind.Array)
 		{
 			if (root.TryGetProperty("datacount", out var dc))
 				dataCount = dc;
 
-			return data[0];
+			packages.AddRange(data.EnumerateArray());
 		}
-
-		// Case 2: raw array of packages
-		if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() > 0)
-			return root[0];
-
-		// Case 3: single package object
-		return root;
-	}
-
-	private static string? TryBuildPackageSummary(string body)
-	{
-		try
+		// Raw array
+		else if (root.ValueKind == JsonValueKind.Array)
 		{
-			using var doc = JsonDocument.Parse(body);
-			var root = doc.RootElement;
-
-			var pkg = ExtractFirstPackage(root, out var dataCount);
-			return SummarizePackage(pkg, dataCount);
+			packages.AddRange(root.EnumerateArray());
 		}
-		catch
+		// Single object
+		else
 		{
-			return null;
+			packages.Add(root);
 		}
+
+		var infos = new List<PackageInfo>(packages.Count);
+
+		foreach (var pkg in packages)
+		{
+			if (pkg.ValueKind != JsonValueKind.Object)
+				continue;
+
+			var id = GetString(pkg, "Id") ?? string.Empty;
+			var label = GetString(pkg, "Label") ?? string.Empty;
+			var lastModified = GetString(pkg, "LastModified") ?? string.Empty;
+
+			// ONLY the three fields you care about in summary:
+			var qty = GetDecimal(pkg, "Quantity");
+			var summary = $"Qty:{(qty?.ToString() ?? "n/a")}";
+
+			var dedupeKey =
+				!string.IsNullOrWhiteSpace(id) && !string.IsNullOrWhiteSpace(lastModified)
+					? $"{id}:{lastModified}"
+					: null;
+
+			infos.Add(new PackageInfo(summary, dedupeKey, id, label, lastModified));
+		}
+
+		return infos;
 	}
 
-	private static string? SummarizePackage(JsonElement pkg, JsonElement? dataCount)
+	private static List<JsonElement> ExtractPackages(JsonElement root, out JsonElement? dataCount)
 	{
-		if (pkg.ValueKind != JsonValueKind.Object)
-			return null;
+		dataCount = null;
+		var list = new List<JsonElement>();
 
-		var label = GetString(pkg, "Label") ?? "(n/a)";
-		var id = GetString(pkg, "Id") ?? "(n/a)";
-		var type = GetString(pkg, "PackageType") ?? "(n/a)";
+		if (root.ValueKind == JsonValueKind.Object &&
+			root.TryGetProperty("data", out var data) &&
+			data.ValueKind == JsonValueKind.Array)
+		{
+			if (root.TryGetProperty("datacount", out var dc))
+				dataCount = dc;
 
-		var qty = GetDecimal(pkg, "Quantity");
-		var uom = GetString(pkg, "UnitOfMeasureAbbreviation");
-		if (string.IsNullOrWhiteSpace(uom) || uom == "(n/a)")
-			uom = GetString(pkg, "UnitOfMeasureName") ?? "(n/a)";
+			list.AddRange(data.EnumerateArray());
+			return list;
+		}
 
-		var location = GetString(pkg, "SublocationName");
-		if (string.IsNullOrWhiteSpace(location) || location == "(n/a)")
-			location = GetString(pkg, "LocationName") ?? "(n/a)";
+		if (root.ValueKind == JsonValueKind.Array)
+		{
+			list.AddRange(root.EnumerateArray());
+			return list;
+		}
 
-		var lab = GetString(pkg, "LabTestingState") ?? "(n/a)";
-		var lastMod = GetString(pkg, "LastModified") ?? "(n/a)";
-
-		var itemName = "(n/a)";
-		if (pkg.TryGetProperty("Item", out var item) && item.ValueKind == JsonValueKind.Object)
-			itemName = GetString(item, "Name") ?? "(n/a)";
-
-		var flags =
-			$"Hold:{YN(GetBool(pkg, "IsOnHold"))} " +
-			$"Inv:{YN(GetBool(pkg, "IsOnInvestigation"))} " +
-			$"Recall:{YN(GetBool(pkg, "IsOnRecallCombined"))} " +
-			$"Finished:{YN(GetBool(pkg, "IsFinished"))}";
-
-		var countText = dataCount.HasValue ? $"datacount={dataCount.Value}" : null;
-
-		var qtyText = qty is null ? "(n/a)" : $"{qty:0.####} {uom}".Trim();
-
-		return $@"{(countText is null ? "" : $"{countText}\n")}Label: {label} Id: {id} • Type: {type} Item: {itemName} Qty: {qtyText} Loc: {location} Lab: {lab} • {flags} LastModified: {lastMod}"
-			.Trim();
+		list.Add(root);
+		return list;
 	}
+
 
 	private static string? GetString(JsonElement obj, string name)
 		=> obj.ValueKind == JsonValueKind.Object && obj.TryGetProperty(name, out var v) ? v.ToString() : null;
@@ -161,5 +163,13 @@ public static class MetrcPackagesWebhookPayloadHelper
 
 
 }
+
+public record PackageInfo(
+	string Summary,
+	string? DedupeKey,
+	string Id,
+	string Label,
+	string LastModified
+);
 
 
