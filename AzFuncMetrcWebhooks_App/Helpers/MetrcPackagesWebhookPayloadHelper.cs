@@ -160,9 +160,4 @@ public static class MetrcPackagesWebhookPayloadHelper
 
 }
 
-public sealed record PackageInfo(
-		string Summary,
-		string? DedupeKey,
-		string Id,
-		string Label,
-		string LastModified);
+
