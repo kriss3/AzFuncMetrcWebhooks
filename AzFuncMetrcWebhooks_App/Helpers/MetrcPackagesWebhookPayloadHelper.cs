@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using AzFuncMetrcWebhooks_App.Models;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace AzFuncMetrcWebhooks_App.Helpers;
 
@@ -15,48 +11,52 @@ public static class MetrcPackagesWebhookPayloadHelper
 		return await reader.ReadToEndAsync();
 	}
 
-	public static PackageInfo BuildInfoOrFallback(string body)
+	public static MetrcPackagesPayload ParsePackages(string body)
 	{
-		var summary = TryBuildPackageSummary(body)
-			?? "Received Metrc Packages webhook (could not parse fields yet).";
+		using var doc = JsonDocument.Parse(body);
+		var root = doc.RootElement;
 
-		// If we can’t parse key fields, keep existing behavior:
-		// - still send pushover using summary
-		// - dedupeKey stays null (so caller won’t dedupe)
-		try
+		List<JsonElement> packageElements = new();
+		int dataCount;
+
+		if (root.ValueKind == JsonValueKind.Object &&
+			root.TryGetProperty("data", out var data) &&
+			data.ValueKind == JsonValueKind.Array)
 		{
-			using var doc = JsonDocument.Parse(body);
-			var root = doc.RootElement;
-
-			var pkg = ExtractFirstPackage(root, out var dataCount);
-
-			var id = GetString(pkg, "Id") ?? "(no Id)";
-			var lastModified = GetString(pkg, "LastModified") ?? "(no LastModified)";
-			var label = GetString(pkg, "Label") ?? "(no Label)";
-
-			var dedupeKey = $"{id}:{lastModified}";
-
-			// IMPORTANT: summary should be derived from the same pkg we extracted
-			// so it matches the dedupe fields.
-			summary = SummarizePackage(pkg, dataCount) ?? summary;
-
-			return new PackageInfo(
-				Summary: summary,
-				DedupeKey: dedupeKey,
-				Id: id,
-				Label: label,
-				LastModified: lastModified);
+			packageElements.AddRange(data.EnumerateArray());
+			dataCount = root.TryGetProperty("datacount", out var dc)
+				? dc.GetInt32()
+				: packageElements.Count;
 		}
-		catch
+		else if (root.ValueKind == JsonValueKind.Array)
 		{
-			return new PackageInfo(
-				Summary: summary,
-				DedupeKey: null,
-				Id: "(unknown)",
-				Label: "(unknown)",
-				LastModified: "(unknown)");
+			packageElements.AddRange(root.EnumerateArray());
+			dataCount = packageElements.Count;
 		}
+		else
+		{
+			packageElements.Add(root);
+			dataCount = 1;
+		}
+
+		var packages = new List<MetrcPackageEvent>(packageElements.Count);
+
+		foreach (var pkg in packageElements)
+		{
+			if (pkg.ValueKind != JsonValueKind.Object)
+				continue;
+
+			packages.Add(new MetrcPackageEvent(
+				Id: GetString(pkg, "Id") ?? "(no-id)",
+				Label: GetString(pkg, "Label") ?? "(no-label)",
+				Quantity: GetDecimal(pkg, "Quantity"),
+				LastModified: GetString(pkg, "LastModified") ?? "(no-lastmodified)"
+			));
+		}
+
+		return new MetrcPackagesPayload(dataCount, packages);
 	}
+
 
 	private static JsonElement ExtractFirstPackage(JsonElement root, out JsonElement? dataCount)
 	{
@@ -157,6 +157,8 @@ public static class MetrcPackagesWebhookPayloadHelper
 	}
 
 	private static string YN(bool? v) => v == true ? "Y" : "N";
+
+
 
 }
 
