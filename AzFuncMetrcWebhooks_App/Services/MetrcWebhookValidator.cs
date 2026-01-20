@@ -1,35 +1,23 @@
-﻿using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.Extensions.Configuration;
+﻿using System.Net;
+using System.Text;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Extensions.Logging;
 
-namespace AzFuncMetrcWebhooks_App.Services;
-
-public sealed class MetrcWebhookValidator
+public sealed class MetrcWebhookInspectFunction
 {
-	public bool IsValid(HttpRequestData req)
+	private readonly ILogger<MetrcWebhookInspectFunction> _logger;
+
+	public MetrcWebhookInspectFunction(ILogger<MetrcWebhookInspectFunction> logger)
 	{
-		// Read at request time (not at startup)
-		var expectedSecret = Environment.GetEnvironmentVariable("MetrcWebhook__Secret");
+		_logger = logger;
+	}
 
-		if (string.IsNullOrWhiteSpace(expectedSecret))
-			return false;
-
-		var query = req.Url.Query;
-		if (string.IsNullOrWhiteSpace(query))
-			return false;
-
-		var parts = query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries);
-
-		foreach (var p in parts)
-		{
-			var kv = p.Split('=', 2);
-			if (kv.Length == 2 &&
-				string.Equals(kv[0], "secret", StringComparison.OrdinalIgnoreCase))
-			{
-				var actual = Uri.UnescapeDataString(kv[1]);
-				return string.Equals(actual, expectedSecret, StringComparison.Ordinal);
-			}
-		}
-
-		return false;
+	[Function("MetrcWebhookInspect")]
+	public async Task<HttpResponseData> Run(
+		[HttpTrigger(AuthorizationLevel.Anonymous, "post", "put")]
+		HttpRequestData req)
+	{
+		
 	}
 }
