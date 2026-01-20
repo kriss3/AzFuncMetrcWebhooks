@@ -4,6 +4,8 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 
+namespace AzFuncMetrcWebhooks_App.Services;
+
 public sealed class MetrcWebhookInspectFunction(ILogger<MetrcWebhookInspectFunction> logger)
 {
 	private readonly ILogger<MetrcWebhookInspectFunction> _logger = logger;
