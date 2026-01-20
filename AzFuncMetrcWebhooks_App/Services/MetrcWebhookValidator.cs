@@ -21,6 +21,10 @@ public sealed class MetrcWebhookInspectFunction
 		// 1️.PROVE METRC CALLED YOU
 		_logger.LogWarning("METRC WEBHOOK RECEIVED");
 
+		// 2️.LOG REQUEST INFO
+		_logger.LogWarning("Method: {method}", req.Method);
+		_logger.LogWarning("Url: {url}", req.Url);
+
 		
 	}
 }
