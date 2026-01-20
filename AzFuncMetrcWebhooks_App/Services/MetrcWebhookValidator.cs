@@ -4,16 +4,11 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 
-public sealed class MetrcWebhookInspectFunction
+public sealed class MetrcWebhookInspectFunction(ILogger<MetrcWebhookInspectFunction> logger)
 {
-	private readonly ILogger<MetrcWebhookInspectFunction> _logger;
+	private readonly ILogger<MetrcWebhookInspectFunction> _logger = logger;
 
-	public MetrcWebhookInspectFunction(ILogger<MetrcWebhookInspectFunction> logger)
-	{
-		_logger = logger;
-	}
-
-	[Function("MetrcWebhookInspect")]
+    [Function("MetrcWebhookInspect")]
 	public async Task<HttpResponseData> Run(
 		[HttpTrigger(AuthorizationLevel.Anonymous, "post", "put")]
 		HttpRequestData req)
