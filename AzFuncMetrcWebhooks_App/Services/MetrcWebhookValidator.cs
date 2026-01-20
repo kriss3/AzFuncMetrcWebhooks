@@ -25,6 +25,19 @@ public sealed class MetrcWebhookInspectFunction
 		_logger.LogWarning("Method: {method}", req.Method);
 		_logger.LogWarning("Url: {url}", req.Url);
 
-		
+		// 3️.READ AND LOG RAW BODY (THIS IS WHAT YOU CARE ABOUT)
+		string body;
+		using (var reader = new StreamReader(req.Body, Encoding.UTF8))
+		{
+			body = await reader.ReadToEndAsync();
+		}
+
+		_logger.LogWarning("RAW PAYLOAD START");
+		_logger.LogWarning(body);
+		_logger.LogWarning("RAW PAYLOAD END");
+
+		// 4.ALWAYS RETURN 200 OK
+		return req.CreateResponse(HttpStatusCode.OK);
+
 	}
 }
