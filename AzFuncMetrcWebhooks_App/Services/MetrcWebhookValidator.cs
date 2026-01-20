@@ -18,6 +18,9 @@ public sealed class MetrcWebhookInspectFunction
 		[HttpTrigger(AuthorizationLevel.Anonymous, "post", "put")]
 		HttpRequestData req)
 	{
+		// 1️.PROVE METRC CALLED YOU
+		_logger.LogWarning("METRC WEBHOOK RECEIVED");
+
 		
 	}
 }
