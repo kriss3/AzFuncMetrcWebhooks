@@ -2,15 +2,15 @@
   "version": "2.0",
   "logging": {
     "logLevel": {
-      "Default": "Information",
-      "Function.MetrcPackagesWebhook": "Information"
+      "default": "Warning",
+      "AzFuncMetrcWebhooks_App": "Information",
+      "Microsoft": "Warning",
+      "Host": "Warning"
     },
     "applicationInsights": {
       "samplingSettings": {
-        "isEnabled": true,
-        "excludedTypes": "Request"
-      },
-      "enableLiveMetricsFilters": true
+        "isEnabled": true
+      }
     }
   }
 }
