@@ -35,6 +35,5 @@ public sealed class MetrcWebhookInspectFunction(ILogger<MetrcWebhookInspectFunct
 
 		// 4.ALWAYS RETURN 200 OK
 		return req.CreateResponse(HttpStatusCode.OK);
-
 	}
 }
