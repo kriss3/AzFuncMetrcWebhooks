@@ -1,37 +1,35 @@
-﻿using System.Net;
-using System.Text;
-using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Extensions.Configuration;
 
 namespace AzFuncMetrcWebhooks_App.Services;
 
-public sealed class MetrcWebhookInspectFunction(ILogger<MetrcWebhookInspectFunction> logger)
+public sealed class MetrcWebhookValidator
 {
-	private readonly ILogger<MetrcWebhookInspectFunction> _logger = logger;
-
-    [Function("MetrcWebhookInspect")]
-	public async Task<HttpResponseData> Run(
-		[HttpTrigger(AuthorizationLevel.Anonymous, "post", "put")]
-		HttpRequestData req)
+	public static bool IsValid(HttpRequestData req)
 	{
-		// 1️.PROVE METRC CALLED YOU
-		_logger.LogWarning("METRC WEBHOOK RECEIVED");
+		// Read at request time (not at startup)
+		var expectedSecret = Environment.GetEnvironmentVariable("MetrcWebhook__Secret");
 
-		// 2️.LOG REQUEST INFO
-		_logger.LogWarning("Method: {method}", req.Method);
-		_logger.LogWarning("Url: {url}", req.Url);
+		if (string.IsNullOrWhiteSpace(expectedSecret))
+			return false;
 
-		// 3️.READ AND LOG RAW BODY (THIS IS WHAT YOU CARE ABOUT)
-		string body;
-		using (var reader = new StreamReader(req.Body, Encoding.UTF8))
+		var query = req.Url.Query;
+		if (string.IsNullOrWhiteSpace(query))
+			return false;
+
+		var parts = query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries);
+
+		foreach (var p in parts)
 		{
-			body = await reader.ReadToEndAsync();
+			var kv = p.Split('=', 2);
+			if (kv.Length == 2 &&
+				string.Equals(kv[0], "secret", StringComparison.OrdinalIgnoreCase))
+			{
+				var actual = Uri.UnescapeDataString(kv[1]);
+				return string.Equals(actual, expectedSecret, StringComparison.Ordinal);
+			}
 		}
 
-		_logger.LogWarning("RAW PAYLOAD: {Payload}", body);
-
-		// 4.ALWAYS RETURN 200 OK
-		return req.CreateResponse(HttpStatusCode.OK);
+		return false;
 	}
 }
