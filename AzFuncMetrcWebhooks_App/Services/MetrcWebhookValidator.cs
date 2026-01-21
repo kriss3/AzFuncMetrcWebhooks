@@ -29,9 +29,7 @@ public sealed class MetrcWebhookInspectFunction(ILogger<MetrcWebhookInspectFunct
 			body = await reader.ReadToEndAsync();
 		}
 
-		_logger.LogWarning("RAW PAYLOAD START");
-		_logger.LogWarning(body);
-		_logger.LogWarning("RAW PAYLOAD END");
+		_logger.LogWarning("RAW PAYLOAD: {Payload}", body);
 
 		// 4.ALWAYS RETURN 200 OK
 		return req.CreateResponse(HttpStatusCode.OK);
