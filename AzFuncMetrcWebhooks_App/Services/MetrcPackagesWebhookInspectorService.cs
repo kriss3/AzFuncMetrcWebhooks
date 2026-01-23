@@ -1,4 +1,5 @@
-﻿using Microsoft.Azure.Functions.Worker.Http;
+﻿using AzFuncMetrcWebhooks_App.Helpers;
+using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -23,5 +24,12 @@ public sealed class MetrcPackagesWebhookInspectorService
 
 	public async Task<HttpResponseData> InspectAsync(HttpRequestData req)
 	{
+		// 1) Always prove request arrived (even if secret invalid)
+		_log.LogWarning("METRC WEBHOOK ARRIVED: {method} {url}", req.Method, req.Url);
+
+		// 2) Read body once
+		var body = await MetrcPackagesWebhookPayloadHelper.ReadBodyAsync(req.Body);
+
+		_log.LogWarning("RAW BODY: length={len}", body?.Length ?? 0);
 	}
 }
