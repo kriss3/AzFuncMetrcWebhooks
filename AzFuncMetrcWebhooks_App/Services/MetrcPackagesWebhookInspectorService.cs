@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,5 +19,9 @@ public sealed class MetrcPackagesWebhookInspectorService
 	{
 		_validator = validator;
 		_log = log;
+	}
+
+	public async Task<HttpResponseData> InspectAsync(HttpRequestData req)
+	{
 	}
 }
