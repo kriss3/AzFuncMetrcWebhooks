@@ -31,5 +31,13 @@ public sealed class MetrcPackagesWebhookInspectorService
 		var body = await MetrcPackagesWebhookPayloadHelper.ReadBodyAsync(req.Body);
 
 		_log.LogWarning("RAW BODY: length={len}", body?.Length ?? 0);
+
+		// preview only (keeps logs manageable)
+		var preview = string.IsNullOrEmpty(body)
+			? ""
+			: (body.Length <= 2000 ? body : body[..2000]);
+
+		_log.LogWarning("RAW BODY PREVIEW (first 2000 chars): {preview}", preview);
+
 	}
 }
